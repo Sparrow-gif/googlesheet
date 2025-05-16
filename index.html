@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,81 +6,75 @@
     <title>Contact Form</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="card p-4">
+            <h3 class="mb-3">Contact Form</h3>
+            <form id="contactForm">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="message" class="form-label">Message</label>
+                    <textarea class="form-control" id="message" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Submit</button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // JavaScript Interface se Android Device ID lena
-        function getDeviceId() {
-            if (window.AndroidInterface && window.AndroidInterface.getDeviceId) {
-                return window.AndroidInterface.getDeviceId();
-            }
-            return null;
-        }
+        // Google Apps Script URL (Replace with your script URL)
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwf5RsbGF6plKhlId9Eno6WYVrZLilQNC5-TubIQWlPi_uU2417YzRnQVpxPH1zLGFo/exec';
 
-        function submitForm(event) {
-            event.preventDefault();
+        // Form Submission
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-            const deviceId = getDeviceId();
+            // 🟢 Get Device ID from Android WebView Interface
+            let deviceId = Android.getDeviceId();
+
             if (!deviceId) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: 'Device not found. Form cannot be submitted.',
+                    title: 'Device ID not found',
+                    text: 'Form cannot be submitted without a valid device ID.'
                 });
                 return;
             }
 
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const message = document.getElementById('message').value;
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('message', document.getElementById('message').value);
+            formData.append('deviceId', deviceId);
 
-            fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ name, email, message, deviceId }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.result === 'success') {
+            try {
+                const response = await fetch(scriptURL, { method: 'POST', body: formData });
+                if (response.ok) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Success',
-                        text: 'Form submitted successfully!',
+                        title: 'Form Submitted!',
+                        text: 'Your response has been recorded.'
                     });
                     document.getElementById('contactForm').reset();
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Submission Failed',
-                        text: 'There was an error submitting the form.',
-                    });
+                    throw new Error('Network response was not ok.');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Network Error',
-                    text: 'Could not submit the form. Please try again.',
+                    title: 'Submission Failed',
+                    text: 'Please try again later.'
                 });
-            });
-        }
+            }
+        });
     </script>
-</head>
-<body class="container mt-5">
-    <div class="card p-4 shadow">
-        <h2 class="mb-3">Contact Us</h2>
-        <form id="contactForm" onsubmit="submitForm(event)">
-            <div class="mb-3">
-                <input type="text" id="name" class="form-control" placeholder="Your Name" required>
-            </div>
-            <div class="mb-3">
-                <input type="email" id="email" class="form-control" placeholder="Your Email" required>
-            </div>
-            <div class="mb-3">
-                <textarea id="message" class="form-control" placeholder="Your Message" rows="4" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Submit</button>
-        </form>
-    </div>
 </body>
-</html>
+</html>""
