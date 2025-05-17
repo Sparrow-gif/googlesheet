@@ -24,7 +24,7 @@
     <script>
         function getDeviceIdFromApp() {
             if (window.Android && typeof window.Android.getDeviceId === 'function') {
-                window.Android.getDeviceId();
+               return window.Android.getDeviceId();
             }
             return null;
         }
