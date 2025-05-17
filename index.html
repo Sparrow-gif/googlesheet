@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>Account Creation</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -17,51 +19,72 @@
                 <label for="email" class="form-label">Email:</label>
                 <input type="email" class="form-control" id="email" required>
             </div>
-            <button type="button" class="btn btn-primary" onclick="createAccount()">Create Account</button>
+            <button type="submit" class="btn btn-primary">Create Account</button>
         </form>
     </div>
 
     <script>
+        // Attempt to get device ID from Android interface
         function getDeviceIdFromApp() {
-            if (window.Android && typeof window.Android.getDeviceId === 'function') {
-               return window.Android.getDeviceId();
+            try {
+                if (window.Android && typeof window.Android.getDeviceId === 'function') {
+                    return window.Android.getDeviceId();
+                }
+            } catch (err) {
+                console.error("Error getting device ID:", err);
             }
             return null;
         }
 
-        function createAccount() {
-            // Get form values
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            
-            // Get device ID from Android app
+        document.getElementById('accountForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
             const deviceId = getDeviceIdFromApp();
-            
+
             if (!deviceId) {
                 Swal.fire('Error!', 'Cannot create account - device not recognized', 'error');
                 return;
             }
 
-            // Submit data to Google Sheets
+            // Optional: Validate email format again
+            if (!/\S+@\S+\.\S+/.test(email)) {
+                Swal.fire('Error!', 'Please enter a valid email address', 'warning');
+                return;
+            }
+
+            // Show loading popup
+            Swal.fire({
+                title: 'Creating Account...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Submit to Google Apps Script
             fetch('https://script.google.com/macros/s/AKfycbysI7NH1XZYH828c0aPAixRAmtruWvi44bdPbLEfYrQ7G3lA7uUGnprwu0lfaVAgJz4/exec', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&deviceId=${deviceId}`
+                body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&deviceId=${encodeURIComponent(deviceId)}`
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === "success") {
                     Swal.fire('Success!', 'Account created successfully!', 'success');
+                    document.getElementById('accountForm').reset();
                 } else {
                     Swal.fire('Error!', data.message || 'Failed to create account', 'error');
                 }
             })
             .catch(error => {
+                console.error("Error during submission:", error);
                 Swal.fire('Error!', 'Network error occurred', 'error');
             });
-        }
+        });
     </script>
 </body>
 </html>
